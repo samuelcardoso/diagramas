@@ -1,4 +1,4 @@
-import { useCallback, useState, FC, CSSProperties } from 'react';
+import { useCallback, useState, FC, CSSProperties, useEffect } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -17,49 +17,72 @@ import {
   BackgroundVariant,
   useReactFlow,
   Panel,
-  Viewport,
+  NodeOrigin,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-
-// Animação CSS para as arestas (sem alterações)
+// Animação CSS para as arestas
 const CustomAnimatedEdgeStyle = `
   @keyframes dashdraw { from { stroke-dashoffset: 1000; } }
-  .animated-edge .react-flow__edge-path { stroke-dasharray: 5; animation: dashdraw 40s linear infinite; }
+  .animated-edge .react-flow__edge-path {
+    stroke-dasharray: 5;
+    animation: dashdraw 40s linear infinite;
+  }
+  .highlighted-edge .react-flow__edge-path {
+    stroke:rgb(204, 0, 44);
+    stroke-width: 2.5;
+    strokeWidth: 4
+  }
+  .auth-edge .react-flow__edge-path {
+    stroke: #ff9900;
+    stroke-dasharray: 3;
+    animation: dashdraw 5s linear infinite;
+  }
 `;
 
-// Opções padrão para as arestas (sem alterações)
+// Opções padrão para as arestas
 const defaultEdgeOptions = {
   type: 'smoothstep',
   markerEnd: { type: MarkerType.ArrowClosed, color: '#232f3e' },
-  style: { strokeWidth: 2, stroke: '#232f3e' },
+  style: { strokeWidth: 1 }, // <-- REMOVA a propriedade 'stroke' daqui
 };
 
-// =================================================================================
-// COMPONENTE DE NÓ CUSTOMIZADO PARA EXIBIR Grupos
-// =================================================================================
-const AwsGroupNode: FC<NodeProps> = ({ data, selected }) => {
+// Estilo base para os nós
+const nodeBaseStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '10px 15px',
+  backgroundColor: '#fff',
+  border: '1px solid #ddd',
+  borderRadius: '8px',
+  width: 170,
+  textAlign: 'center',
+  fontSize: '13px',
+  boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+  transition: 'all 0.2s ease-in-out',
+};
+
+// Nó para Grupos Lógicos (AWS-1, Cluster)
+const GroupNode: FC<NodeProps> = ({ data, selected }) => {
   return (
     <div
       style={{
-        backgroundColor: 'rgba(243, 245, 246, 0.8)',
-        border: selected ? '2px dashed #007acc' : '1px dashed #232f3e',
-        width: data.width as string || 650,
-        height: data.height as string || 350,
-        borderRadius: 8,
+        width: '100%',
+        height: '100%',
+        border: selected ? '2px solid rgb(204, 0, 44)' : '2px dashed #99aab4',
+        borderRadius: 12,
         position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
       }}
     >
       <div
         style={{
           position: 'absolute',
-          top: 8,
-          left: 8,
+          top: 10,
+          left: 15,
           fontWeight: 'bold',
-          fontSize: 14,
+          fontSize: 16,
           color: '#232f3e',
         }}
       >
@@ -69,266 +92,464 @@ const AwsGroupNode: FC<NodeProps> = ({ data, selected }) => {
   );
 };
 
-// =================================================================================
-// COMPONENTE DE NÓ CUSTOMIZADO PARA EXIBIR ÍCONES DA AWS (sem alterações)
-// =================================================================================
-const AwsIconNode: FC<NodeProps> = ({ data }) => {
-  const nodeStyle: CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    width: 150,
-    textAlign: 'center',
-    fontSize: '12px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-  };
 
-  const iconStyle: CSSProperties = {
-    width: 48,
-    height: 48,
-    marginBottom: 8,
-  };
+// Nó para Ícones da AWS
+const AwsIconNode: FC<NodeProps> = ({ data, selected }) => {
+    const isHighlighted = data.highlighted;
+    const isCached = data.isCached;
 
-  return (
-    <div style={nodeStyle}>
-      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
-      <img src={data.icon as string} alt={data.label as string} style={iconStyle} />
-      <strong>{data.label as string}</strong>
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
-    </div>
-  );
+    const dynamicStyle: CSSProperties = {
+        ...nodeBaseStyle,
+        border: selected ? '2px solid #252f3e' : (isHighlighted ? '2px solid rgb(204, 0, 44)' : '1px solid #ddd'),
+        backgroundColor: isCached ? '#d1eaff' : '#fff',
+        transform: isHighlighted ? 'scale(1.05)' : 'scale(1)',
+    };
+
+    return (
+        <div style={dynamicStyle}>
+            <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
+            <img src={data.icon as string} alt={data.label as string} style={{ width: 48, height: 48, marginBottom: 8 }} />
+            <strong>{data.label as string}</strong>
+            {typeof data.subLabel === 'string' && <span style={{fontSize: '10px', color: '#555', marginTop: '4px'}}>{data.subLabel}</span>}
+            <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+        </div>
+    );
 };
 
-// Mapeia o nome do tipo de nó para o componente React.
+// Nó para Simular Clientes Externos
+const ClientNode: FC<NodeProps> = ({ data, selected }) => {
+    const isHighlighted = data.highlighted;
+     const dynamicStyle: CSSProperties = {
+        ...nodeBaseStyle,
+        border: selected ? '2px solid #252f3e' : (isHighlighted ? '2px solid #ff9900' : '1px solid #ddd'),
+        backgroundColor: '#f7f7f7',
+    };
+    return (
+     <div style={dynamicStyle}>
+        <img src={data.icon as string} alt={data.label as string} style={{ width: 48, height: 48, marginBottom: 8 }} />
+        <strong>{data.label as string}</strong>
+        <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+     </div>
+    );
+};
+
+
+// Mapeamento dos tipos de nós
 const nodeTypes = {
-  awsIconNode: AwsIconNode,
-  awsGroupNode: AwsGroupNode,
+  awsIcon: AwsIconNode,
+  group: GroupNode,
+  client: ClientNode,
 };
 
+
 // =================================================================================
-// ESTADO INICIAL DO DIAGRAMA (SEPARADO)
+// ESTADO INICIAL DO DIAGRAMA (ESTRUTURA DA ARQUITETURA)
 // =================================================================================
 
-// 1. Definições dos Nós (sem as posições)
-// Aqui definimos a estrutura, os dados e o tipo de cada nó.
+const nodeOrigin: NodeOrigin = [0.5, 0.5];
+
+// 1. Definições dos Nós (Estrutura, dados, tipo)
+// src/examples/Test/test.tsx
+
+// 1. Definições dos Nós (Estrutura, dados, tipo)
+// src/examples/Test/test.tsx
+
+// 1. Definições dos Nós (Estrutura, dados, tipo)
 const initialNodeDefinitions: Omit<Node, 'position'>[] = [
+  { id: 'client-web', type: 'client', data: { label: 'Aplicação Web (React)', icon: '/assets/Front-End-Web-Mobile/Amplify.svg' }},
+  { id: 'client-mobile', type: 'client', data: { label: 'Aplicação Mobile (Flutter)', icon: '/assets/App-Integration/Console-Mobile-Application.svg' }},
+
   {
-    id: 'api-gateway',
-    type: 'awsIconNode',
-    data: {
-      label: 'API Gateway',
-      icon: '/assets/App-Integration/API-Gateway.svg',
+    id: 'aws-1',
+    type: 'group',
+    data: { label: 'AWS' },
+    style: {
+      width: '1500px',
+      height: '950px',
+      backgroundColor: 'rgba(239, 242, 243, 0.7)',
     },
   },
+  { id: 'bff-web', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Web BFF Gateway', icon: '/assets/App-Integration/API-Gateway.svg' }},
+  { id: 'bff-mobile', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Mobile BFF Gateway', icon: '/assets/App-Integration/API-Gateway.svg' }},
+  { id: 'auth-service', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Serviço de Autenticação', icon: '/assets/Security-Identity-Compliance/Cognito.svg', latency: '15ms', reqs: '150/s' }},
   {
     id: 'kafka-cluster',
-    type: 'awsGroupNode',
-    data: {
-      label: 'Kafka Cluster (Amazon MSK)',
-      width: 650,
-      height: 350,
-    },
+    type: 'group',
+    parentId: 'aws-1',
+    data: { label: 'Kafka Cluster (Amazon MSK)' },
     style: {
-      width: 650,
-      height: 350,
+      width: '450px',
+      height: '300px',
+      backgroundColor: 'rgba(255, 244, 224, 0.8)',
     },
   },
-  {
-    id: 'kafka-topic',
-    type: 'awsIconNode',
-    parentId: 'kafka-cluster',
-    extent: 'parent',
-    data: {
-      label: 'Tópico Kafka',
-      icon: '/assets/Analytics/Managed-Streaming-for-Apache-Kafka.svg',
-    },
-  },
-  {
-    id: 'ms-1',
-    type: 'awsIconNode',
-    parentId: 'kafka-cluster',
-    extent: 'parent',
-    data: {
-      label: 'Microsserviço A',
-      icon: '/assets/Compute/EC2.svg'
-    },
-  },
-  {
-    id: 'ms-2',
-    type: 'awsIconNode',
-    data: {
-      label: 'Microsserviço B',
-      icon: '/assets/Compute/EC2.svg'
-    },
-  },
-  {
-    id: 'lambda-1',
-    type: 'awsIconNode',
-    data: {
-      label: 'Função Lambda A',
-      icon: '/assets/Compute/Lambda.svg'
-    },
-  },
-  {
-    id: 'lambda-2',
-    type: 'awsIconNode',
-    data: {
-      label: 'Função Lambda B',
-      icon: '/assets/Compute/Lambda.svg'
-    },
-  },
-  {
-    id: 'dynamodb',
-    type: 'awsIconNode',
-    data: {
-      label: 'DynamoDB',
-      icon: '/assets/Database/DynamoDB.svg'
-    },
-  },
+  { id: 'kafka-topic', type: 'awsIcon', parentId: 'kafka-cluster', extent: 'parent', data: { label: 'Tópico de Pedidos', icon: '/assets/Analytics/Managed-Streaming-for-Apache-Kafka.svg' }},
+  { id: 'ms-1', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Microsserviço de Pedidos', icon: '/assets/Compute/EC2.svg', latency: '50ms', reqs: '30/s' }},
+  { id: 'ms-2', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Microsserviço de Estoque', icon: '/assets/Compute/EC2.svg', latency: '35ms', reqs: '30/s' }},
+  { id: 'lambda-1', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Lambda de Notificação', icon: '/assets/Compute/Lambda.svg', latency: '25ms', reqs: '30/s' }},
+  { id: 'dynamodb', type: 'awsIcon', parentId: 'aws-1', data: { label: 'DynamoDB (Pedidos)', icon: '/assets/Database/DynamoDB.svg' }},
+  { id: 'notification-service', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Serviço de Notificação', icon: '/assets/App-Integration/Simple-Notification-Service.svg' }},
 ];
-
-// 2. Posições iniciais dos nós
-// Este é o objeto que você pode atualizar com os dados salvos.
-const initialNodePositions: { [key: string]: { x: number, y: number } } = 
-{
-  "api-gateway": {
-    "x": -289.83,
-    "y": 310.84
+// 2. Posições iniciais dos nós (ESTE É O OBJETO QUE VOCÊ IRÁ ATUALIZAR)
+const initialNodePositions: { [key: string]: { x: number, y: number } } = {
+  "client-web": {
+    "x": -1824,
+    "y": -331
+  },
+  "client-mobile": {
+    "x": -1799,
+    "y": -542
+  },
+  "aws-1": {
+    "x": -389,
+    "y": -55
+  },
+  "bff-web": {
+    "x": -343,
+    "y": 355
+  },
+  "bff-mobile": {
+    "x": -248,
+    "y": 150
+  },
+  "auth-service": {
+    "x": 158,
+    "y": 820
   },
   "kafka-cluster": {
-    "x": 42.13,
-    "y": 147.21
+    "x": 533,
+    "y": 258
   },
   "kafka-topic": {
-    "x": 245.96,
-    "y": 134.21
+    "x": 232,
+    "y": 151
   },
   "ms-1": {
-    "x": -126.45,
-    "y": 485.54
+    "x": 1062,
+    "y": 181
   },
   "ms-2": {
-    "x": 308.05,
-    "y": 219.55
+    "x": 1104,
+    "y": 440
   },
   "lambda-1": {
-    "x": 795.33,
-    "y": 258.6
-  },
-  "lambda-2": {
-    "x": 796.15,
-    "y": 371.39
+    "x": 800,
+    "y": 622
   },
   "dynamodb": {
-    "x": 1070.32,
-    "y": 191.89
+    "x": 1362,
+    "y": 293
+  },
+  "notification-service": {
+    "x": 1106,
+    "y": 797
   }
 }
 
-// 3. Definição inicial das arestas
-const initialEdges: Edge[] = [
-    { id: 'e-api-kafka', source: 'api-gateway', target: 'kafka-topic', animated: true, className: 'animated-edge' },
-    { id: 'e-kafka-ms1', source: 'kafka-topic', target: 'ms-1', animated: true, className: 'animated-edge' },
-    { id: 'e-kafka-ms2', source: 'kafka-topic', target: 'ms-2', animated: true, className: 'animated-edge' },
-    { id: 'e-kafka-lambda1', source: 'kafka-topic', target: 'lambda-1', animated: true, className: 'animated-edge' },
-    { id: 'e-kafka-lambda2', source: 'kafka-topic', target: 'lambda-2', animated: true, className: 'animated-edge' },
-    { id: 'e-ms1-db', source: 'ms-1', target: 'dynamodb', animated: true, className: 'animated-edge' },
-    { id: 'e-ms2-db', source: 'ms-2', target: 'dynamodb', animated: true, className: 'animated-edge' },
-    { id: 'e-lambda1-db', source: 'lambda-1', target: 'dynamodb', animated: true, className: 'animated-edge' },
-    { id: 'e-lambda2-db', source: 'lambda-2', target: 'dynamodb', animated: true, className: 'animated-edge' },
-];
-
-const initialViewport: Viewport = { x: 504.88, y: 190.10, zoom: 1.22 };
-
-// Combina as definições com as posições para criar o estado inicial dos nós
+// 3. Função para combinar definições e posições
 const getInitialNodes = (): Node[] => {
   return initialNodeDefinitions.map(nodeDef => ({
     ...nodeDef,
-    position: initialNodePositions[nodeDef.id] || { x: 0, y: 0 }, // Fallback para posição 0,0
+    position: initialNodePositions[nodeDef.id] || { x: 0, y: 0 },
   }));
 };
 
+const initialEdges: Edge[] = [
+  // Conexões dos Clientes aos Gateways
+  { id: 'e-client-web-bff', source: 'client-web', target: 'bff-web', zIndex: 10 },
+  { id: 'e-client-mobile-bff', source: 'client-mobile', target: 'bff-mobile', zIndex: 10 },
+  // Conexões de Autenticação
+  { id: 'e-bff-web-auth', source: 'bff-web', target: 'auth-service', label: 'Valida JWT', type: 'step', zIndex: 10 },
+  { id: 'e-bff-mobile-auth', source: 'bff-mobile', target: 'auth-service', label: 'Valida JWT', type: 'step', zIndex: 10 },
+  // Conexões dos Gateways para o Kafka
+  { id: 'e-bff-web-kafka', source: 'bff-web', target: 'kafka-topic', zIndex: 10 },
+  { id: 'e-bff-mobile-kafka', source: 'bff-mobile', target: 'kafka-topic', zIndex: 10 },
+  // Conexões do Kafka para os Consumidores (SEM animated: true)
+  { id: 'e-kafka-ms1', source: 'kafka-topic', target: 'ms-1', zIndex: 10 },
+  { id: 'e-kafka-ms2', source: 'kafka-topic', target: 'ms-2', zIndex: 10 },
+  { id: 'e-kafka-lambda1', source: 'kafka-topic', target: 'lambda-1', zIndex: 10 },
+  // Conexões dos Consumidores para outros serviços
+  { id: 'e-ms1-db', source: 'ms-1', target: 'dynamodb', zIndex: 10 },
+  { id: 'e-ms2-db', source: 'ms-2', target: 'dynamodb', zIndex: 10 },
+  { id: 'e-lambda1-sns', source: 'lambda-1', target: 'notification-service', zIndex: 10 },
+];
 
 // =================================================================================
-// COMPONENTE DE CONTROLES PARA SALVAR (CORRIGIDO)
+// PAINÉIS DE INTERAÇÃO E DETALHES
 // =================================================================================
-const SaveControls = () => {
+
+// NOVO: Painel para Salvar o Layout
+const SaveLayoutControls = () => {
   const { getNodes } = useReactFlow();
   const [output, setOutput] = useState('');
 
-  // CORREÇÃO: Esta função agora extrai e formata apenas as posições dos nós.
-  const handleSave = useCallback(() => {
-    const currentNodes = getNodes();
-    
-    // Usa 'reduce' para transformar o array de nós em um objeto de posições
-    const nodePositions = currentNodes.reduce((acc, node) => {
-      // Arredonda os valores para 2 casas decimais para um JSON mais limpo
+  const onSave = useCallback(() => {
+    const nodes = getNodes();
+    const nodePositions = nodes.reduce((acc, node) => {
       acc[node.id] = {
-        x: Math.round(node.position.x * 100) / 100,
-        y: Math.round(node.position.y * 100) / 100,
+        x: Math.round(node.position.x),
+        y: Math.round(node.position.y),
       };
       return acc;
-    }, {} as { [key: string]: { x: number, y: number } });
+    }, {} as { [key: string]: { x: number; y: number } });
 
     const positionsJson = JSON.stringify(nodePositions, null, 2);
     setOutput(positionsJson);
-    console.log('Posições dos Nós:', positionsJson);
   }, [getNodes]);
-  
-  const textAreaStyle: CSSProperties = {
-      position: 'absolute', top: '50px', right: '10px', width: '350px',
-      height: '400px', zIndex: 10, border: '2px solid #333',
-      borderRadius: '8px', padding: '10px', fontFamily: 'monospace',
-      fontSize: '12px', backgroundColor: '#f5f5f5',
-  };
 
   return (
-    <Panel position="top-right">
-      <button onClick={handleSave}>Salvar Posições</button>
-      {output && <textarea style={textAreaStyle} readOnly value={output} />}
+    <Panel position="bottom-center" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', backgroundColor: '#f0f2f3', border: '1px solid #ddd', borderRadius: '8px', }}>
+      <button onClick={onSave}>Salvar Layout</button>
+      {output && (
+        <textarea
+          readOnly
+          style={{ width: '350px', height: '300px', fontFamily: 'monospace' }}
+          value={output}
+        />
+      )}
     </Panel>
   );
+};
+
+
+// Painel de Controles para simular interações
+const InteractionPanel = ({
+    onToggleCache,
+    isCacheActive,
+    onToggleWebRequest,
+    onToggleMobileRequest,
+    isWebRequestRunning,
+    isMobileRequestRunning,
+}: {
+    onToggleCache: () => void;
+    isCacheActive: boolean;
+    onToggleWebRequest: () => void;
+    onToggleMobileRequest: () => void;
+    isWebRequestRunning: boolean;
+    isMobileRequestRunning: boolean;
+}) => {
+    return (
+        <Panel position="top-left" style={{ padding: '10px', backgroundColor: '#f0f2f3', border: '1px solid #ddd', borderRadius: '8px', display: 'flex', gap: '10px' }}>
+            <button 
+                onClick={onToggleWebRequest}
+                style={{
+                    backgroundColor: isWebRequestRunning ? '#cc002c' : '#fff',
+                    color: isWebRequestRunning ? '#fff' : '#000',
+                    border: isWebRequestRunning ? '1px solid #cc002c' : '1px solid #ccc'
+                }}
+            >
+                Disparar Requisição Web
+            </button>
+            
+            <button
+                onClick={onToggleMobileRequest}
+                style={{
+                    backgroundColor: isMobileRequestRunning ? '#cc002c' : '#fff',
+                    color: isMobileRequestRunning ? '#fff' : '#000',
+                    border: isMobileRequestRunning ? '1px solid #cc002c' : '1px solid #ccc'
+                }}
+            >
+                Disparar Requisição Mobile
+            </button>
+            
+            <button onClick={onToggleCache} style={{ backgroundColor: isCacheActive ? '#007acc' : '#fff', color: isCacheActive ? '#fff' : '#000' }}>
+              Simular Cache na API {isCacheActive ? '(Ativo)' : '(Inativo)'}
+            </button>
+        </Panel>
+    );
+};
+
+// Painel para exibir detalhes do nó selecionado
+const DetailsPanel = ({ node }: { node: Node | null }) => {
+    if (!node) {
+        return (
+            <Panel position="top-right" style={{ padding: '15px', width: '250px', backgroundColor: 'rgba(255,255,255,0.9)', border: '1px solid #ddd', borderRadius: '8px'}}>
+                <h3 style={{marginTop: 0}}>Painel de Detalhes</h3>
+                <p>Arraste os nós para organizá-los.</p>
+                <p>Clique em um nó para ver detalhes ou nos botões de simulação para ver o fluxo de dados.</p>
+                <p>Use o botão "Salvar Layout" na parte inferior para exportar as novas posições.</p>
+            </Panel>
+        );
+    }
+
+    return (
+        <Panel position="top-right" style={{ padding: '20px', width: '250px', backgroundColor: 'rgba(255,255,255,0.9)', border: '1px solid #ddd', borderRadius: '8px' }}>
+            <h3 style={{ marginTop: 0 }}>{node.data.label as string}</h3>
+            <p><strong>ID:</strong> {node.id}</p>
+            <p><strong>Tipo:</strong> {node.type}</p>
+            <p><strong>Posição:</strong> X: {Math.round(node.position.x)}, Y: {Math.round(node.position.y)}</p>
+            { typeof node.data.reqs === 'string' && typeof node.data.latency === 'string' && (node.data.latency || node.data.reqs) &&
+              <>
+                <hr/>
+                <h4 style={{marginBottom: '10px'}}>Métricas (Exemplo):</h4>
+                {node.data.latency && <p><strong>Latência:</strong> {node.data.latency}</p>}
+                {node.data.reqs && <p><strong>Req/s:</strong> {node.data.reqs}</p>}
+              </>
+            }
+        </Panel>
+    );
 };
 
 
 // =================================================================================
 // COMPONENTE PRINCIPAL DO DIAGRAMA
 // =================================================================================
-const AwsArchitectureDiagram = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+const AwsArchitectureDiagramFlow = () => {
+    const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+    const [isCacheActive, setIsCacheActive] = useState(false);
+    const [isWebRequestRunning, setIsWebRequestRunning] = useState(false);
+    const [isMobileRequestRunning, setIsMobileRequestRunning] = useState(false);
 
-  const onConnect = useCallback(
-    (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
+    const onConnect = useCallback((params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
-  return (
-    <div style={{ height: '100vh', width: '100%' }}>
-      <style>{CustomAnimatedEdgeStyle}</style>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        defaultEdgeOptions={defaultEdgeOptions}
-        nodeOrigin={[0.5, 0.5]}
-        defaultViewport={initialViewport}
-        fitView
-      >
-        <Controls />
-        <Background variant={BackgroundVariant.Dots} gap={24} size={1} />
-        <SaveControls />
-      </ReactFlow>
-    </div>
-  );
+    const handleNodeClick: any = useCallback((event: any, node: any) => {
+        setSelectedNode(node);
+    }, []);
+
+    // =====================================================================================
+    // CORREÇÃO 1: FUNÇÕES DE LÓGICA MOVIDAS PARA CIMA
+    // =====================================================================================
+
+    const resetHighlights = () => {
+        setNodes((nds) =>
+            nds.map((n) => ({ ...n, data: { ...n.data, highlighted: false } }))
+        );
+        setEdges((eds) =>
+            eds.map((e) => ({
+                ...e,
+                className: e.className
+                            ?.replace('highlighted-edge', '')
+                            .replace('auth-edge', '')
+                            .replace('animated-edge', '')
+                            .trim()
+            }))
+        );
+    };
+
+    // CORREÇÃO 2: highlightPath agora aceita um parâmetro "temporary"
+    const highlightPath = (path: string[], authPath: string[] = [], temporary: boolean = false) => {
+        resetHighlights();
+
+        setNodes((nds) =>
+            nds.map((n) => ({
+                ...n,
+                data: { ...n.data, highlighted: path.includes(n.id) || authPath.includes(n.id) },
+            }))
+        );
+
+        setEdges((eds) =>
+            eds.map((e) => {
+                const isAuthEdge = authPath.includes(e.source) && authPath.includes(e.target);
+                const isMainPathEdge = path.includes(e.source) && path.includes(e.target);
+                let newClassName = e.className || '';
+                
+                if (isAuthEdge) {
+                    newClassName = `${newClassName} auth-edge`.trim();
+                }
+                if(isMainPathEdge){
+                    newClassName = `${newClassName} highlighted-edge animated-edge`.trim();
+                }
+                return { ...e, className: newClassName };
+            })
+        );
+        
+        // A animação só será limpa automaticamente se "temporary" for true
+        if (temporary) {
+            setTimeout(resetHighlights, 5000);
+        }
+    };
+    
+    // Agora esta função chama highlightPath com a animação permanente (toggle)
+    const handleToggleWebRequest = () => {
+        if (isWebRequestRunning) {
+            resetHighlights();
+            setIsWebRequestRunning(false);
+        } else {
+            const bff = 'bff-web';
+            const authPath = [bff, 'auth-service'];
+
+            if (isCacheActive) {
+                const cachePath = ['client-web', bff];
+                highlightPath(cachePath, authPath); // temporary é false por padrão
+            } else {
+                const commonPath = ['kafka-topic', 'ms-1', 'ms-2', 'lambda-1', 'dynamodb', 'notification-service'];
+                const clientPath = [`client-web`, bff, ...commonPath];
+                highlightPath(clientPath, authPath); // temporary é false por padrão
+            }
+            setIsWebRequestRunning(true);
+        }
+    };
+
+    const handleToggleMobileRequest = () => {
+        if (isMobileRequestRunning) {
+            resetHighlights();
+            setIsMobileRequestRunning(false);
+        } else {
+            const bff = 'bff-mobile';
+            const authPath = [bff, 'auth-service'];
+            const commonPath = ['kafka-topic', 'ms-1', 'ms-2', 'lambda-1', 'dynamodb', 'notification-service'];
+            const clientPath = ['client-mobile', bff, ...commonPath];
+            
+            highlightPath(clientPath, authPath);
+            setIsMobileRequestRunning(true);
+        }
+    };
+
+    const handleToggleCache = () => {
+        setIsCacheActive(prev => !prev);
+    };
+
+    useEffect(() => {
+        setNodes(nds => nds.map(n => {
+            if (n.id === 'bff-web') {
+                return { ...n, data: { ...n.data, isCached: isCacheActive, subLabel: isCacheActive ? 'Cache Ativado' : '' }};
+            }
+            return n;
+        }));
+    }, [isCacheActive, setNodes]);
+
+
+    return (
+        <div style={{ height: '100vh', width: '100%' }}>
+            <style>{CustomAnimatedEdgeStyle}</style>
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeClick={handleNodeClick}
+                onPaneClick={() => setSelectedNode(null)}
+                nodeTypes={nodeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
+                nodeOrigin={nodeOrigin}
+                fitView
+            >
+                <Controls />
+                <Background variant={BackgroundVariant.Dots} gap={24} size={1} />
+                <InteractionPanel 
+                    onToggleWebRequest={handleToggleWebRequest}
+                    onToggleMobileRequest={handleToggleMobileRequest}
+                    onToggleCache={handleToggleCache}
+                    isCacheActive={isCacheActive}
+                    isWebRequestRunning={isWebRequestRunning}
+                    isMobileRequestRunning={isMobileRequestRunning}
+                />
+                <DetailsPanel node={selectedNode} />
+                <SaveLayoutControls />
+            </ReactFlow>
+        </div>
+    );
 };
+
+
+// Componente Wrapper com o Provider para habilitar o hook useReactFlow
+const AwsArchitectureDiagram = () => (
+  <ReactFlowProvider>
+    <AwsArchitectureDiagramFlow />
+  </ReactFlowProvider>
+);
 
 export default AwsArchitectureDiagram;
