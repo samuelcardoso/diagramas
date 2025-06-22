@@ -1,4 +1,17 @@
 import { useCallback, useState, FC, CSSProperties, useEffect } from 'react';
+// import amplifyIcon from '@/assets/Front-End-Web-Mobile/Amplify.svg'
+// assets/Front-End-Web-Mobile/Amplify.svg
+// /assets/App-Integration/Console-Mobile-Application.svg
+// /assets/App-Integration/API-Gateway.svg
+// assets/App-Integration/Console-Mobile-Application.svg
+// /assets/Security-Identity-Compliance/Cognito.svg
+// /assets/Analytics/Managed-Streaming-for-Apache-Kafka.svg
+// /assets/Compute/EC2.svg
+// /assets/Compute/EC2.svg
+// /assets/Compute/Lambda.svg
+// /assets/Database/DynamoDB.svg
+// /assets/App-Integration/Simple-Notification-Service.svg
+  
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -44,7 +57,7 @@ const CustomAnimatedEdgeStyle = `
 const defaultEdgeOptions = {
   type: 'smoothstep',
   markerEnd: { type: MarkerType.ArrowClosed, color: '#232f3e' },
-  style: { strokeWidth: 1 }, // <-- REMOVA a propriedade 'stroke' daqui
+  style: { strokeWidth: 1 },
 };
 
 // Estilo base para os nós
@@ -92,7 +105,6 @@ const GroupNode: FC<NodeProps> = ({ data, selected }) => {
   );
 };
 
-
 // Nó para Ícones da AWS
 const AwsIconNode: FC<NodeProps> = ({ data, selected }) => {
     const isHighlighted = data.highlighted;
@@ -133,14 +145,12 @@ const ClientNode: FC<NodeProps> = ({ data, selected }) => {
     );
 };
 
-
 // Mapeamento dos tipos de nós
 const nodeTypes = {
   awsIcon: AwsIconNode,
   group: GroupNode,
   client: ClientNode,
 };
-
 
 // =================================================================================
 // ESTADO INICIAL DO DIAGRAMA (ESTRUTURA DA ARQUITETURA)
@@ -190,6 +200,7 @@ const initialNodeDefinitions: Omit<Node, 'position'>[] = [
   { id: 'dynamodb', type: 'awsIcon', parentId: 'aws-1', data: { label: 'DynamoDB (Pedidos)', icon: '/assets/Database/DynamoDB.svg' }},
   { id: 'notification-service', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Serviço de Notificação', icon: '/assets/App-Integration/Simple-Notification-Service.svg' }},
 ];
+
 // 2. Posições iniciais dos nós (ESTE É O OBJETO QUE VOCÊ IRÁ ATUALIZAR)
 const initialNodePositions: { [key: string]: { x: number, y: number } } = {
   "client-web": {
@@ -278,7 +289,7 @@ const initialEdges: Edge[] = [
 // PAINÉIS DE INTERAÇÃO E DETALHES
 // =================================================================================
 
-// NOVO: Painel para Salvar o Layout
+// Painel para Salvar o Layout
 const SaveLayoutControls = () => {
   const { getNodes } = useReactFlow();
   const [output, setOutput] = useState('');
@@ -310,7 +321,6 @@ const SaveLayoutControls = () => {
     </Panel>
   );
 };
-
 
 // Painel de Controles para simular interações
 const InteractionPanel = ({
@@ -390,7 +400,6 @@ const DetailsPanel = ({ node }: { node: Node | null }) => {
     );
 };
 
-
 // =================================================================================
 // COMPONENTE PRINCIPAL DO DIAGRAMA
 // =================================================================================
@@ -408,10 +417,6 @@ const AwsArchitectureDiagramFlow = () => {
         setSelectedNode(node);
     }, []);
 
-    // =====================================================================================
-    // CORREÇÃO 1: FUNÇÕES DE LÓGICA MOVIDAS PARA CIMA
-    // =====================================================================================
-
     const resetHighlights = () => {
         setNodes((nds) =>
             nds.map((n) => ({ ...n, data: { ...n.data, highlighted: false } }))
@@ -428,8 +433,7 @@ const AwsArchitectureDiagramFlow = () => {
         );
     };
 
-    // CORREÇÃO 2: highlightPath agora aceita um parâmetro "temporary"
-    const highlightPath = (path: string[], authPath: string[] = [], temporary: boolean = false) => {
+    const highlightPath = (path: string[], authPath: string[] = []) => {
         resetHighlights();
 
         setNodes((nds) =>
@@ -454,14 +458,8 @@ const AwsArchitectureDiagramFlow = () => {
                 return { ...e, className: newClassName };
             })
         );
-        
-        // A animação só será limpa automaticamente se "temporary" for true
-        if (temporary) {
-            setTimeout(resetHighlights, 5000);
-        }
     };
     
-    // Agora esta função chama highlightPath com a animação permanente (toggle)
     const handleToggleWebRequest = () => {
         if (isWebRequestRunning) {
             resetHighlights();
@@ -472,11 +470,11 @@ const AwsArchitectureDiagramFlow = () => {
 
             if (isCacheActive) {
                 const cachePath = ['client-web', bff];
-                highlightPath(cachePath, authPath); // temporary é false por padrão
+                highlightPath(cachePath, authPath);
             } else {
                 const commonPath = ['kafka-topic', 'ms-1', 'ms-2', 'lambda-1', 'dynamodb', 'notification-service'];
                 const clientPath = [`client-web`, bff, ...commonPath];
-                highlightPath(clientPath, authPath); // temporary é false por padrão
+                highlightPath(clientPath, authPath);
             }
             setIsWebRequestRunning(true);
         }
@@ -543,7 +541,6 @@ const AwsArchitectureDiagramFlow = () => {
         </div>
     );
 };
-
 
 // Componente Wrapper com o Provider para habilitar o hook useReactFlow
 const AwsArchitectureDiagram = () => (
