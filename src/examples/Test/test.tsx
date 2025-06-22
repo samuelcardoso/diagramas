@@ -1,16 +1,14 @@
 import { useCallback, useState, FC, CSSProperties, useEffect } from 'react';
-// import amplifyIcon from '@/assets/Front-End-Web-Mobile/Amplify.svg'
-// assets/Front-End-Web-Mobile/Amplify.svg
-// /assets/App-Integration/Console-Mobile-Application.svg
-// /assets/App-Integration/API-Gateway.svg
-// assets/App-Integration/Console-Mobile-Application.svg
-// /assets/Security-Identity-Compliance/Cognito.svg
-// /assets/Analytics/Managed-Streaming-for-Apache-Kafka.svg
-// /assets/Compute/EC2.svg
-// /assets/Compute/EC2.svg
-// /assets/Compute/Lambda.svg
-// /assets/Database/DynamoDB.svg
-// /assets/App-Integration/Simple-Notification-Service.svg
+
+import iconAmplify              from '@/assets/Front-End-Web-Mobile/Amplify.svg';
+import iconAppMobile            from '@/assets/App-Integration/Console-Mobile-Application.svg';
+import iconApiGateway           from '@/assets/App-Integration/API-Gateway.svg';
+import iconCognito              from '@/assets/Security-Identity-Compliance/Cognito.svg';
+import iconKafka                from '@/assets/Analytics/Managed-Streaming-for-Apache-Kafka.svg';
+import iconEc2                  from '@/assets/Compute/EC2.svg';
+import iconLambda               from '@/assets/Compute/Lambda.svg';
+import iconDynamo               from '@/assets/Database/DynamoDB.svg';
+import iconSns                  from '@/assets/App-Integration/Simple-Notification-Service.svg';
   
 import {
   ReactFlow,
@@ -166,39 +164,39 @@ const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
 // 1. Definições dos Nós (Estrutura, dados, tipo)
 const initialNodeDefinitions: Omit<Node, 'position'>[] = [
-  { id: 'client-web', type: 'client', data: { label: 'Aplicação Web (React)', icon: '/assets/Front-End-Web-Mobile/Amplify.svg' }},
-  { id: 'client-mobile', type: 'client', data: { label: 'Aplicação Mobile (Flutter)', icon: '/assets/App-Integration/Console-Mobile-Application.svg' }},
-
-  {
-    id: 'aws-1',
-    type: 'group',
+  { id: 'client-web',    type: 'client', data: { label: 'Aplicação Web (React)',    icon: iconAmplify } },
+  { id: 'client-mobile', type: 'client', data: { label: 'Aplicação Mobile (Flutter)', icon: iconAppMobile } },
+  { id: 'aws-1', type: 'group',
     data: { label: 'AWS' },
-    style: {
-      width: '1500px',
-      height: '950px',
-      backgroundColor: 'rgba(239, 242, 243, 0.7)',
-    },
+    style: { width: '1500px', height: '950px', backgroundColor: 'rgba(239, 242, 243, 0.7)' }
   },
-  { id: 'bff-web', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Web BFF Gateway', icon: '/assets/App-Integration/API-Gateway.svg' }},
-  { id: 'bff-mobile', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Mobile BFF Gateway', icon: '/assets/App-Integration/API-Gateway.svg' }},
-  { id: 'auth-service', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Serviço de Autenticação', icon: '/assets/Security-Identity-Compliance/Cognito.svg', latency: '15ms', reqs: '150/s' }},
-  {
-    id: 'kafka-cluster',
-    type: 'group',
-    parentId: 'aws-1',
+  { id: 'bff-web',   type: 'awsIcon', parentId: 'aws-1', data: { label: 'Web BFF Gateway',    icon: iconApiGateway } },
+  { id: 'bff-mobile',type: 'awsIcon', parentId: 'aws-1', data: { label: 'Mobile BFF Gateway', icon: iconApiGateway } },
+  { id: 'auth-service', type: 'awsIcon', parentId: 'aws-1',
+    data: { label: 'Serviço de Autenticação', icon: iconCognito, latency: '15ms', reqs: '150/s' }
+  },
+  { id: 'kafka-cluster', type: 'group', parentId: 'aws-1',
     data: { label: 'Kafka Cluster (Amazon MSK)' },
-    style: {
-      width: '450px',
-      height: '300px',
-      backgroundColor: 'rgba(255, 244, 224, 0.8)',
-    },
+    style: { width: '450px', height: '300px', backgroundColor: 'rgba(255, 244, 224, 0.8)' }
   },
-  { id: 'kafka-topic', type: 'awsIcon', parentId: 'kafka-cluster', extent: 'parent', data: { label: 'Tópico de Pedidos', icon: '/assets/Analytics/Managed-Streaming-for-Apache-Kafka.svg' }},
-  { id: 'ms-1', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Microsserviço de Pedidos', icon: '/assets/Compute/EC2.svg', latency: '50ms', reqs: '30/s' }},
-  { id: 'ms-2', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Microsserviço de Estoque', icon: '/assets/Compute/EC2.svg', latency: '35ms', reqs: '30/s' }},
-  { id: 'lambda-1', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Lambda de Notificação', icon: '/assets/Compute/Lambda.svg', latency: '25ms', reqs: '30/s' }},
-  { id: 'dynamodb', type: 'awsIcon', parentId: 'aws-1', data: { label: 'DynamoDB (Pedidos)', icon: '/assets/Database/DynamoDB.svg' }},
-  { id: 'notification-service', type: 'awsIcon', parentId: 'aws-1', data: { label: 'Serviço de Notificação', icon: '/assets/App-Integration/Simple-Notification-Service.svg' }},
+  { id: 'kafka-topic', type: 'awsIcon', parentId: 'kafka-cluster', extent: 'parent',
+    data: { label: 'Tópico de Pedidos', icon: iconKafka }
+  },
+  { id: 'ms-1', type: 'awsIcon', parentId: 'aws-1',
+    data: { label: 'Microsserviço de Pedidos',  icon: iconEc2, latency: '50ms', reqs: '30/s' }
+  },
+  { id: 'ms-2', type: 'awsIcon', parentId: 'aws-1',
+    data: { label: 'Microsserviço de Estoque', icon: iconEc2, latency: '35ms', reqs: '30/s' }
+  },
+  { id: 'lambda-1', type: 'awsIcon', parentId: 'aws-1',
+    data: { label: 'Lambda de Notificação', icon: iconLambda, latency: '25ms', reqs: '30/s' }
+  },
+  { id: 'dynamodb', type: 'awsIcon', parentId: 'aws-1',
+    data: { label: 'DynamoDB (Pedidos)', icon: iconDynamo }
+  },
+  { id: 'notification-service', type: 'awsIcon', parentId: 'aws-1',
+    data: { label: 'Serviço de Notificação', icon: iconSns }
+  },
 ];
 
 // 2. Posições iniciais dos nós (ESTE É O OBJETO QUE VOCÊ IRÁ ATUALIZAR)
