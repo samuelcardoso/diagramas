@@ -18,7 +18,7 @@ export default function Header() {
     <>
       <header>
         <a className="logo" href="https://github.com/xyflow/xyflow">
-          React Flow Dev
+          Introdução à Arquitetura Cloud-Native e Serverless
         </a>
         <select value={currentPath} onChange={(event) => setCurrentPath(event.target.value)}>
           {routes.map((route) => (
