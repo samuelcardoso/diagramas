@@ -10,7 +10,7 @@ export default function Header() {
 
   useEffect(() => {
     const name = routes.find((route) => route.path === currentPath)?.name;
-    document.title = `React Flow Examples${name ? ' - ' + name : ''}`;
+    document.title = `Material de Ensino -> ${name ? ' - ' + name : ''}`;
     navigate(currentPath);
   }, [currentPath]);
 
