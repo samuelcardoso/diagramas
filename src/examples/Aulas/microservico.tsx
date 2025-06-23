@@ -225,8 +225,8 @@ const Diagram = () => {
                style={{ padding: 10, background: '#f0f2f3', border: '1px solid #ddd',
                         borderRadius: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={() => switchTo('mono')}
-                  style={{ background: modo === 'mono' ? 'red' : '#fff',
-                           color: modo === 'mono' ? '#fff' : '#000' }}>
+            style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', border: '1px solid #ddd', borderRadius: '8px', background: modo === 'mono' ? 'red' : '#fff', color: modo === 'mono' ? '#fff' : '#000'}}>
+                  
             Monólito
           </button>
           <button onClick={fluxoMono} >▶ Fluxo Monólito</button>

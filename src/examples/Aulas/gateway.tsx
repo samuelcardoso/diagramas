@@ -161,7 +161,7 @@ const initialNodeDefinitions: Omit<Node, 'position'>[] = [
   { id: 'client-mobile', type: 'client', data: { label: 'Aplicação Mobile (Flutter)', icon: iconAppMobile } },
   { id: 'aws-1', type: 'group',
     data: { label: 'AWS' },
-    style: { width: '1500px', height: '950px', backgroundColor: 'rgba(239, 242, 243, 0.7)' }
+    style: { width: '1500px', height: '850px', backgroundColor: 'rgba(239, 242, 243, 0.7)' }
   },
   { id: 'bff-web',   type: 'awsIcon', parentId: 'aws-1', data: { label: 'Web BFF Gateway',    icon: iconApiGateway } },
   { id: 'bff-mobile',type: 'awsIcon', parentId: 'aws-1', data: { label: 'Mobile BFF Gateway', icon: iconApiGateway } },
@@ -189,11 +189,11 @@ const initialNodeDefinitions: Omit<Node, 'position'>[] = [
 const initialNodePositions: { [key: string]: { x: number, y: number } } = {
   "client-web": {
     "x": -1824,
-    "y": -331
+    "y": -231
   },
   "client-mobile": {
     "x": -1799,
-    "y": -542
+    "y": -442
   },
   "aws-1": {
     "x": -389,
@@ -209,7 +209,7 @@ const initialNodePositions: { [key: string]: { x: number, y: number } } = {
   },
   "auth-service": {
     "x": 408,
-    "y": 820
+    "y": 760
   },
   "ms-1": {
     "x": 825,
@@ -229,7 +229,7 @@ const initialNodePositions: { [key: string]: { x: number, y: number } } = {
   },
   "notification-service": {
     "x": 1356,
-    "y": 797
+    "y": 760
   }
 }
 
@@ -342,8 +342,8 @@ const InteractionPanel = ({
                 Disparar Requisição Mobile
             </button>
             
-            <button onClick={onToggleCache} style={{ backgroundColor: isCacheActive ? '#007acc' : '#fff', color: isCacheActive ? '#fff' : '#000' }}>
-              Simular Cache na API {isCacheActive ? '(Ativo)' : '(Inativo)'}
+            <button onClick={onToggleCache} style={{ backgroundColor: isCacheActive ? '#007acc' : '#fff', color: isCacheActive ? '#fff' : '#000',  display: 'flex', flexDirection: 'column', gap: '10px', padding: '10px', border: '1px solid #ddd', borderRadius: '8px' }}>
+              ▶ Simular Cache na API {isCacheActive ? '(Ativo)' : '(Inativo)'}
             </button>
         </Panel>
     );
