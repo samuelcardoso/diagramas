@@ -1,7 +1,7 @@
 import { useCallback, useState, FC, CSSProperties, useEffect } from 'react';
 
-import iconAmplify              from '@/assets/Front-End-Web-Mobile/Amplify.svg';
-import iconAppMobile            from '@/assets/App-Integration/Console-Mobile-Application.svg';
+import iconWeb              from '@/assets/Front-End-Web-Mobile/browser-icon.png';
+import iconMobile            from '@/assets/Front-End-Web-Mobile/mobile-icon.png';
 import iconApiGateway           from '@/assets/App-Integration/API-Gateway.svg';
 import iconCognito              from '@/assets/Security-Identity-Compliance/Cognito.svg';
 import iconEc2                  from '@/assets/Compute/EC2.svg';
@@ -157,8 +157,8 @@ const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
 // 1. Definições dos Nós (Estrutura, dados, tipo)
 const initialNodeDefinitions: Omit<Node, 'position'>[] = [
-  { id: 'client-web',    type: 'client', data: { label: 'Aplicação Web (React)',    icon: iconAmplify } },
-  { id: 'client-mobile', type: 'client', data: { label: 'Aplicação Mobile (Flutter)', icon: iconAppMobile } },
+  { id: 'client-web',    type: 'client', data: { label: 'Aplicação Web',    icon: iconWeb } },
+  { id: 'client-mobile', type: 'client', data: { label: 'Aplicação Mobile', icon: iconMobile } },
   { id: 'aws-1', type: 'group',
     data: { label: 'AWS' },
     style: { width: '1500px', height: '850px', backgroundColor: 'rgba(239, 242, 243, 0.7)' }

@@ -5,8 +5,8 @@ import {
 } from '@xyflow/react';
 import { useState, CSSProperties, FC } from 'react';
 
-import iconAmplify   from '@/assets/Front-End-Web-Mobile/Amplify.svg';
-import iconMobileApp from '@/assets/App-Integration/Console-Mobile-Application.svg';
+import iconWeb              from '@/assets/Front-End-Web-Mobile/browser-icon.png';
+import iconMobile            from '@/assets/Front-End-Web-Mobile/mobile-icon.png';
 import iconEc2       from '@/assets/Compute/EC2.svg';
 import iconRds       from '@/assets/Database/RDS.svg';
 
@@ -77,8 +77,8 @@ const edgeOpts  = { type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClose
    2. CENÁRIO “ANTES” – MONÓLITO
    =============================================================== */
 const monoNodes: Node[] = [
-  { id: 'web',    type: 'client', position: { x: -450, y:  160 }, data: { label: 'Web',    icon: iconAmplify   } },
-  { id: 'mobile', type: 'client', position: { x: -450, y: 260 }, data: { label: 'Mobile', icon: iconMobileApp } },
+  { id: 'web',    type: 'client', position: { x: -450, y:  160 }, data: { label: 'Web',    icon: iconWeb   } },
+  { id: 'mobile', type: 'client', position: { x: -450, y: 260 }, data: { label: 'Mobile', icon: iconMobile } },
 
   { id: 'grupo-monolito', type: 'group',
     position: { x: -50, y: 40 },
@@ -119,8 +119,8 @@ const monoEdges: Edge[] = [
    3. CENÁRIO “DEPOIS” – MICROSSERVIÇOS
    =============================================================== */
 const microNodes: Node[] = [
-  { id: 'c-web',    type: 'client', position: { x: -450, y:  160 }, data: { label: 'Web',    icon: iconAmplify   } },
-  { id: 'c-mobile', type: 'client', position: { x: -450, y: 260 }, data: { label: 'Mobile', icon: iconMobileApp } },
+  { id: 'c-web',    type: 'client', position: { x: -450, y:  160 }, data: { label: 'Web',    icon: iconWeb   } },
+  { id: 'c-mobile', type: 'client', position: { x: -450, y: 260 }, data: { label: 'Mobile', icon: iconMobile } },
 
 
   { id: 'svc-auth',     type: 'aws', position: { x: 50, y:  20 }, data: { label: 'Serviço Auth',     icon: iconEc2 } },
