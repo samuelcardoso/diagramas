@@ -18,6 +18,8 @@
 // import EdgeTypes from '../examples/EdgeTypes';
 import Gateway from '../examples/Aulas/gateway';
 import Microservice from '../examples/Aulas/microservico';
+import Lambda from '../examples/Aulas/lambda';
+import LambdaEvents from '../examples/Aulas/lambda-events';
 // import Empty from '../examples/Empty';
 // import Figma from '../examples/Figma';
 // import FloatingEdges from '../examples/FloatingEdges';
@@ -75,6 +77,16 @@ const routes: IRoute[] = [
     name: 'Gateway',
     path: 'gateway',
     component: Gateway,
+  },
+  {
+    name: 'Lambda',
+    path: 'lambda',
+    component: Lambda,
+  },
+  {
+    name: 'Lambda Step Functions',
+    path: 'lambda-step-functions',
+    component: LambdaEvents,
   },
   // {
   //   name: 'Add Node on edge Drop',
